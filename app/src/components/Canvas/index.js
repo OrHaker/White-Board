@@ -1,36 +1,50 @@
-import { useRef, useEffect } from 'react';
+import React from "react";
 
-const Canvas = props => {
-	const canvasRef = useRef(null);
+const Canvas = (strokeStyle = "black") => {
+  const canvasRef = React.useRef(null);
+  const contextRef = React.useRef(null);
+  const [isDrawing, setIsDrawing] = React.useState(false);
 
-	const draw = (ctx, frameCount) => {
-		ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
-		ctx.fillStyle = '#000000';
-		ctx.beginPath();
-		ctx.arc(50, 100, 20 * Math.sin(frameCount * 0.05) ** 2, 0, 2 * Math.PI);
-		ctx.fill();
-	};
+  React.useEffect(() => {
+    const canvas = canvasRef.current;
+    canvas.width = window.innerWidth * 0.5;
+    canvas.height = window.innerHeight * 0.5;
 
-	useEffect(() => {
-		const canvas = canvasRef.current;
-		const context = canvas.getContext('2d');
-		let frameCount = 0;
-		let animationFrameId;
+    canvas.style.width = `${window.innerWidth * 0.5}px`;
+    canvas.style.height = `${window.innerHeight * 0.5}px`;
 
-		//Our draw came here
-		const render = () => {
-			frameCount++;
-			draw(context, frameCount);
-			animationFrameId = window.requestAnimationFrame(render);
-		};
-		render();
+    const context = canvas.getContext("2d");
+    context.scale(1, 1);
+    context.lineCap = "round";
+    context.strokeStyle = "black";
+    context.lineWidth = 5;
+    contextRef.current = context;
+  }, []);
 
-		return () => {
-			window.cancelAnimationFrame(animationFrameId);
-		};
-	}, [draw]);
+  React.useEffect(() => {
+    contextRef.current.strokeStyle = strokeStyle.strokeStyle;
+  }, [strokeStyle]);
 
-	return <canvas ref={canvasRef} {...props} />;
+  const starDrawing = ({ nativeEvent }) => {
+    const { offsetX, offsetY } = nativeEvent;
+    contextRef.current.beginPath();
+    contextRef.current.moveTo(offsetX, offsetY);
+    setIsDrawing(true);
+  };
+
+  const finishDrawing = () => {
+    contextRef.current.closePath();
+    setIsDrawing(false);
+  };
+
+  const draw = ({ nativeEvent }) => {
+    if (!isDrawing) return;
+    const { offsetX, offsetY } = nativeEvent;
+    contextRef.current.lineTo(offsetX, offsetY);
+    contextRef.current.stroke();
+  };
+
+  return <canvas ref={canvasRef} onMouseDown={starDrawing} onMouseUp={finishDrawing} onMouseMove={draw} />;
 };
 
 export default Canvas;

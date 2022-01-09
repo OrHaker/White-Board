@@ -1,0 +1,14 @@
+.ColorBar {
+  display: grid;
+  /* define the number of grid columns */
+  grid-template-columns: repeat(auto-fit, 50px);
+  grid-template-rows: auto;
+  justify-content: center;
+  gap: 1px;
+  .color {
+    margin: auto;
+    min-height: 30px;
+    min-width: 30px;
+    cursor: pointer;
+  }
+}
