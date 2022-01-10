@@ -1,31 +1,18 @@
-import { useRef, useState, useEffect } from "react";
+import { useRef, useState, useEffect, forwardRef, useImperativeHandle } from "react";
 import classNames from "classnames";
 import { DRAW_STATES } from "utility/utilFunctions";
 
-import rough from "roughjs/bundled/rough.esm";
-
 import "./style.scss";
 
-const createElement = (id, x1, y1, x2, y2, type) => {
-  switch (type) {
-    case "line":
-    case "rectangle":
-      const roughElement = type === "line" ? generator.line(x1, y1, x2, y2) : generator.rectangle(x1, y1, x2 - x1, y2 - y1);
-      return { id, x1, y1, x2, y2, type, roughElement };
-    case "pencil":
-      return { id, type, points: [{ x: x1, y: y1 }] };
-    case "text":
-      return { id, type, x1, y1, x2, y2, text: "" };
-    default:
-      throw new Error(`Type not recognised: ${type}`);
-  }
-};
-
-const Canvas = ({ strokeStyle = "black", drawState = DRAW_STATES.LINE, shapeSize }) => {
+const Canvas = forwardRef(({ strokeStyle = "black", drawState = DRAW_STATES.LINE, shapeSize }, ref) => {
   const canvasRef = useRef(null);
   const contextRef = useRef(null);
+
   const [isDrawing, setIsDrawing] = useState(false);
-  const generator = rough.generator();
+  const [starDrawingPos, setStarDrawingPos] = useState({ x: 0, y: 0 });
+
+  let xMovement = 0,
+    yMovement = 0;
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -43,6 +30,7 @@ const Canvas = ({ strokeStyle = "black", drawState = DRAW_STATES.LINE, shapeSize
   useEffect(() => {
     //handle stroke color change
     contextRef.current.strokeStyle = strokeStyle;
+    contextRef.current.fillStyle = strokeStyle;
   }, [strokeStyle]);
 
   useEffect(() => {
@@ -68,11 +56,13 @@ const Canvas = ({ strokeStyle = "black", drawState = DRAW_STATES.LINE, shapeSize
     contextRef.current.beginPath();
     contextRef.current.moveTo(offsetX, offsetY);
     setIsDrawing(true);
+    setStarDrawingPos({ x: offsetX, y: offsetY });
   };
 
   const finishDrawing = () => {
     contextRef.current.closePath();
     setIsDrawing(false);
+    xMovement = yMovement = 0;
   };
 
   const draw = ({ nativeEvent }) => {
@@ -80,16 +70,24 @@ const Canvas = ({ strokeStyle = "black", drawState = DRAW_STATES.LINE, shapeSize
     const { offsetX, offsetY } = nativeEvent;
     switch (drawState) {
       case DRAW_STATES.LINE:
-        contextRef.current.lineTo(offsetX, offsetY + 15); //cursor size
+        contextRef.current.lineTo(offsetX + 1, offsetY + 18); //cursor size
         contextRef.current.stroke();
         break;
       case DRAW_STATES.ERASER:
         contextRef.current.clearRect(offsetX + 1, offsetY + 1, shapeSize * 0.9, shapeSize * 0.9);
         break;
       case DRAW_STATES.SQUARE:
-        rough.canvas(canvasRef.current).rectangle(offsetX, offsetY, shapeSize, shapeSize);
+        xMovement = offsetX - starDrawingPos.x;
+        yMovement = offsetY - starDrawingPos.y;
+        contextRef.current.fillRect(starDrawingPos.x, starDrawingPos.y, xMovement, yMovement);
     }
   };
+
+  useImperativeHandle(ref, () => ({
+    clear() {
+      contextRef.current.clearRect(0, 0, canvasRef.current.width, canvasRef.current.height);
+    },
+  }));
 
   const canvasClass = classNames({
     Canvas: true,
@@ -107,6 +105,6 @@ const Canvas = ({ strokeStyle = "black", drawState = DRAW_STATES.LINE, shapeSize
       onMouseMove={draw}
     />
   );
-};
+});
 
 export default Canvas;
