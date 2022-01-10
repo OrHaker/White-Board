@@ -1,23 +1,27 @@
 import React from "react";
 
 import Canvas from "components/Canvas";
-import ColorBar from "components/ColorBar";
+import ToolBar from "components/ToolBar";
 
-import colors, { allColors } from "utility/colors";
+import { DRAW_STATES } from "utility/utilFunctions";
 
 import "./App.scss";
 
 function App() {
-  const [colorBarColors, setColorBarColors] = React.useState([]);
   const [selectedColor, setSelectedColor] = React.useState("black");
+  const [drawState, setDrawState] = React.useState(DRAW_STATES.LINE);
+  const [shapeSize, setShapeSize] = React.useState(50);
 
-  React.useEffect(() => {
-    setColorBarColors(Object.entries(colors));
-  }, []);
   return (
     <div className="App">
-      <Canvas strokeStyle={selectedColor} />
-      <ColorBar colors={colorBarColors} pickColor={(color) => setSelectedColor(color)} />
+      <ToolBar
+        selectedColor={selectedColor}
+        setDrawState={setDrawState}
+        setSelectedColor={setSelectedColor}
+        shapeSize={shapeSize}
+        setShapeSize={setShapeSize}
+      />
+      <Canvas shapeSize={shapeSize} strokeStyle={selectedColor} drawState={drawState} onMouseLeave={() => setDrawState(DRAW_STATES.DEFAULT)} />
     </div>
   );
 }

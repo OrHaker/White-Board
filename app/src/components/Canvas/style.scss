@@ -1,0 +1,11 @@
+.Canvas {
+  &.ERASER {
+    cursor: url("/assets/eraser.svg"), auto;
+  }
+  &.LINE {
+    cursor: url("/assets/pen.svg"), auto;
+  }
+  &.SQUARE {
+    cursor: zoom-out;
+  }
+}
