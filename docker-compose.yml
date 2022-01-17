@@ -1,0 +1,15 @@
+version: '1.0'
+services:
+  app:
+    restart: always
+    build:
+      context: ./app
+    ports:
+      - '9999:80'
+
+  server:
+    restart: always
+    build:
+      context: ./server
+    ports:
+      - '3001:3001'
